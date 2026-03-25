@@ -12,12 +12,18 @@ To freeze all package dependencies:
 1. Build: `docker build -t erfd-fnd .`
 2. Run: `docker run --gpus all -it erfd-fnd`
 
-## ⚙️ Configurations
-The attention heads, frequency dimensions, epochs, and loss weights are dynamically adjusted based on the target dataset:
+**Common Configurations:**
+The following baseline parameters are applied across all datasets:
+- `max_len`: `512`
+- `batch_size`: `4`
+- `hidden_dim`: `768`
 
-| Dataset | `freq_dim` | `attn_heads` | `epochs` | `loss_weight` |
-| :--- | :---: | :---: | :---: | :---: |
-| **PolitiFact** | 4 | 1 | 5 | 0.05 |
-| **GossipCop** | 768 | 2 | 5 | 0.1 |
-| **LUN** | 768 | 4 | 5 | 1.0 |
-| **COVID** | 768 | 4 | 15 | 0.05 |
+**Dataset-Specific Configurations:**
+The attention heads, frequency dimensions, and loss weights are dynamically adjusted based on the target dataset:
+
+| Dataset | `freq_dim` | `attn_heads` | `loss_weight` |
+| :--- | :---: | :---: | :---: |
+| **PolitiFact** | 4 | 1 | 0.05 |
+| **GossipCop** | 768 | 2 | 0.1 |
+| **LUN** | 768 | 4 | 1.0 |
+| **COVID** | 768 | 4 | 0.05 |

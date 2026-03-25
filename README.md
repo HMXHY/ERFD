@@ -4,7 +4,7 @@
 
 To ensure strict reproducibility, this repository provides a 1-click cloud execution via Google Colab and a fully containerized environment via Docker.
 
-## 🚀 Quick Start (Google Colab - Recommended for Reviewers)
+## 🚀 Quick Start (Google Colab)
 Click the **"Open In Colab"** badge above. This will load `inference_demo.ipynb`, allowing you to sequentially execute our pipeline in your browser without any local setup. The notebook will automatically download the pre-trained checkpoints and test datasets.
 
 ## 🐳 Reproducibility via Docker

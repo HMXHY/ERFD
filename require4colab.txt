@@ -1,0 +1,7 @@
+torch
+transformers
+pandas
+numpy>=1.24.0
+scikit-learn
+tqdm
+gdown

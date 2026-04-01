@@ -85,7 +85,6 @@ class Classifier(nn.Module):
         self.pool = nn.AdaptiveAvgPool1d(1) 
         self.hidden_dim = hidden_dim
     def forward(self, input_ids, attention_masks):
-        '''文本图结构特征提取'''
         seq_feat = self.bert(input_ids = input_ids,attention_mask = attention_masks)
         freq_feat = self.fourier_attn(seq_feat.last_hidden_state)
         gate = self.gate(torch.cat([freq_feat, seq_feat[1]], dim=-1))
@@ -152,7 +151,6 @@ def create_eval_loader(input_ids, masks, label, max_len, batch_size):
     return DataLoader(ds, batch_size=batch_size, num_workers=0)
 
 def triplet_loss(aigc_prob, aigc_obj_prob, aigc_emo_prob, margin=1.0):
-    # 计算锚点（aigc_prob）与正样本（aigc_obj_prob 和 aigc_emo_prob）的距离
     dist_pos1 = F.pairwise_distance(aigc_prob, aigc_obj_prob, p=2)
     dist_pos2 = F.pairwise_distance(aigc_prob, aigc_emo_prob, p=2)
     
@@ -164,20 +162,15 @@ def triplet_loss(aigc_prob, aigc_obj_prob, aigc_emo_prob, margin=1.0):
     return loss.mean()
 
 def train2test():
-    #调用训练数据、测试数据、改写风格的测试数据
     train_input_ids, train_masks, label_train = load_origindata_train(args.dataset_name)
-    #调用改写风格的训练数据
     restyle_input_ids_train1, restyle_masks_train1, restyle_input_ids_train2, restyle_masks_train2 = load_reframingsdata(args.dataset_name)
-    
-    #将原训练数据、改写风格的训练数据整合为训练集格式
     trainset = Trainset(input_ids = train_input_ids,  masks = train_masks,
                         restyle_input_ids_1=restyle_input_ids_train1, restyle_masks_1=restyle_masks_train1,
                         restyle_input_ids_2=restyle_input_ids_train2, restyle_masks_2=restyle_masks_train2,
                         label=label_train, max_len=args.max_len)
 
-    #加载训练集
     trainloader = DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=5)
-    #加载测试集testloader、改写风格的测试集testloader_res
+
     test_input_ids, test_masks, test_label = load_origindata_test(args.dataset_name)
     test_loader  = create_eval_loader(input_ids = test_input_ids['O'], masks = test_masks['O'], 
                                 label=test_label, max_len=args.max_len, batch_size = args.batch_size)
@@ -197,7 +190,7 @@ def train2test():
     scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=0, num_training_steps=total_steps)
     CEloss = nn.CrossEntropyLoss()
     KLloss = nn.KLDivLoss(reduction = 'batchmean')
-    # 实验开始记录
+
     if iter == 0:
         logging.info("\n" + "="*80)
         logging.info(f"EXPERIMENT STARTED: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -244,11 +237,11 @@ def train2test():
             cons_loss= 0.5*KLloss(prob_obj_log, prob) + 0.5*KLloss(prob_emo_log, prob)
             loss = sup_loss + cons_loss + args.loss_weight*aigcd_loss
     
-            optimizer.zero_grad() # 清空梯度
-            loss.backward() #计算本epoch 的梯度
+            optimizer.zero_grad()
+            loss.backward()
             epoch_loss.append(loss.item())
-            optimizer.step() # 优化模型参数
-            scheduler.step() # 优化学习率
+            optimizer.step() 
+            scheduler.step() 
         train_losses.append(np.mean(epoch_loss))
         torch.save(model.state_dict(), 'checkpoints/ERFD/' + datasetname + '_iter' + str(iter) + '.m')
         print("Epoch {:05d} | Loss {:.4f}".format(epoch, np.mean(epoch_loss)))
@@ -275,7 +268,7 @@ def train2test():
             C_acc, C_prec, C_rec, C_f1 = output_metrics_metrics(y_test, y_pred_res_C, 'C')
             D_acc, D_prec, D_rec, D_f1 = output_metrics_metrics(y_test, y_pred_res_D, 'D')
             Comb_acc, Comb_prec, Comb_rec, Comb_f1 = output_metrics_metrics(combined_true, combined_pred, 'Combined')
-            # 存储本次迭代结果
+            
             iteration_results = {
                 'original': (orig_acc, orig_prec, orig_rec, orig_f1),
                 'A': (A_acc, A_prec, A_rec, A_f1),
@@ -288,7 +281,7 @@ def train2test():
             return iteration_results
 if __name__ == "__main__":
 
-    # 配置日志记录
+    
     log_filename = os.path.join('logs/para/para_rest', f'{args.dataset_name}_{args.model_name}_{args.loss_weight}_{args.freq_dim}_{args.attn_heads}_{args.epochs}.log')
     logging.basicConfig(
         level=logging.INFO,
@@ -312,7 +305,7 @@ if __name__ == "__main__":
         set_seed(iter)
         results = train2test()
         all_results.append(results)
-    # 最终统计分析
+    
     logging.info("\n" + "="*80)
     logging.info("FINAL STATISTICAL ANALYSIS (Ten Run AVERAGED)")
     logging.info("="*80)
@@ -329,4 +322,4 @@ if __name__ == "__main__":
         logging.info(f"Macro Recall:    {np.mean(recs):.2f}% ± {np.std(recs, ddof=1):.2f}%")
         logging.info(f"Macro F1:        {np.mean(f1s):.2f}% ± {np.std(f1s, ddof=1):.2f}%")
     
-    # 显著性检验（macro F1比较）
+    
